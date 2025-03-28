@@ -1,0 +1,22 @@
+export const GLOBE_CONSTANTS = {
+    TEXTURE_SIZE: 1024,
+    SPHERE_RADIUS: 85,
+    SPHERE_SEGMENTS: 128,
+    CAMERA_FOV: 45,
+    CAMERA_NEAR: 0.1,
+    CAMERA_FAR: 1000,
+    CAMERA_POSITION: 300,
+    TEMPERATURE_LAYER_RADIUS: 86,
+    TEMPERATURE_OPACITY: 0.8,
+    DIFFERENCE_OPACITY: 0.9
+};
+
+export const YEAR_RANGE = {
+    MIN: 1880,
+    MAX: 2024
+};
+
+export const VIEW_MODES = {
+    ABSOLUTE: 'absolute',
+    DIFFERENCE: 'difference'
+}; 
