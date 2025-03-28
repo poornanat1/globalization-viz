@@ -11,6 +11,7 @@ const Globe = () => {
     const [diffRange] = useState({ min: -2, max: 2 });
     const [isPlaying, setIsPlaying] = useState(false);
     const animationRef = useRef(null);
+    const [loadingProgress, setLoadingProgress] = useState(0);
 
     const animate = useCallback(() => {
         setYear(prevYear => {
@@ -25,7 +26,7 @@ const Globe = () => {
 
     const togglePlay = () => setIsPlaying(!isPlaying);
 
-    useEffect(() => {
+  useEffect(() => {
         if (isPlaying) {
             animationRef.current = requestAnimationFrame(animate);
         } else if (animationRef.current) {
@@ -45,7 +46,35 @@ const Globe = () => {
     };
 
     useEffect(() => {
-        fetch('data/temperature_data.json')
+        const controller = new AbortController();
+        
+        fetch('https://media.githubusercontent.com/media/poornanat1/globalization-viz/main/public/data/temperature_data.json')
+            .then(response => {
+                const contentLength = response.headers.get('content-length');
+                const total = parseInt(contentLength, 10);
+                let loaded = 0;
+                
+                const reader = response.body.getReader();
+                return new ReadableStream({
+                    start(controller) {
+                        function push() {
+                            reader.read().then(({done, value}) => {
+                                if (done) {
+                                    controller.close();
+                                    return;
+                                }
+                                loaded += value.length;
+                                const progress = (loaded / total) * 100;
+                                setLoadingProgress(Math.round(progress));
+                                controller.enqueue(value);
+                                push();
+                            });
+                        }
+                        push();
+                    }
+                });
+            })
+            .then(stream => new Response(stream))
             .then(response => response.json())
             .then(data => {
                 setTemperatureData(data);
@@ -56,10 +85,27 @@ const Globe = () => {
                 setIsLoading(false);
             })
             .catch(error => setIsLoading(false));
+
+        return () => controller.abort();
     }, []);
 
-    return (
+  return (
         <div className="ecoscape-container">
+            {isLoading ? (
+                <div className="loading-overlay">
+                    <div className="loading-content">
+                        <div className="loading-progress">
+                            <div 
+                                className="progress-bar" 
+                                style={{ width: `${loadingProgress}%` }}
+                            ></div>
+                        </div>
+                        <div className="loading-text">
+                            Loading temperature data... {loadingProgress}%
+                        </div>
+                    </div>
+                </div>
+            ) : null}
             <div className="main-content">
                 <div className="left-section">
                     <h1>ECOSCAPE</h1>
@@ -160,8 +206,8 @@ const Globe = () => {
                     </div>
                 </div>
             </div>
-        </div>
-    );
+    </div>
+  );
 };
 
 export default Globe; 
